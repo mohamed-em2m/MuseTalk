@@ -9,27 +9,37 @@ mkdir -p models/musetalk models/musetalkV15 models/syncnet models/dwpose models/
 # Install required packages with correct version to avoid conflicts
 echo "Installing dependencies..."
 pip install -U "huggingface_hub[cli]<1.0,>=0.19.3"
-pip install gdown
-export HF_HUB_ENABLE_HF_TRANSFER=1
-# Set HuggingFace mirror endpoint (optional, comment out if you want to use default)
-# export HF_ENDPOINT=https://hf-mirror.com
+pip install gdown aria2
 
-# Use 'hf' command directly (modern HuggingFace CLI)
+# Set HuggingFace mirror endpoint for faster downloads (optional)
+# Uncomment one of these if downloads are slow:
+# export HF_ENDPOINT=https://hf-mirror.com  # China mirror
+# export HF_ENDPOINT=https://hf.co  # Alternative
+
+# Use 'hf' command with resume capability
 HF_CMD="hf"
 
 echo "Using command: $HF_CMD"
 
-# Download MuseTalk V1.0 weights
+# Download MuseTalk V1.0 weights (using direct URL for faster download)
 echo "Downloading MuseTalk V1.0 weights..."
-$HF_CMD download TMElyralab/MuseTalk \
-  --local-dir $CheckpointsDir \
-  --include "musetalk/musetalk.json" "musetalk/pytorch_model.bin"
+mkdir -p $CheckpointsDir/musetalk
+curl -L --progress-bar --create-dirs -C - \
+  -o $CheckpointsDir/musetalk/pytorch_model.bin \
+  "https://huggingface.co/TMElyralab/MuseTalk/resolve/main/musetalk/pytorch_model.bin"
+curl -L --progress-bar \
+  -o $CheckpointsDir/musetalk/musetalk.json \
+  "https://huggingface.co/TMElyralab/MuseTalk/resolve/main/musetalk/musetalk.json"
 
-# Download MuseTalk V1.5 weights (unet.pth)
+# Download MuseTalk V1.5 weights (using direct URL)
 echo "Downloading MuseTalk V1.5 weights..."
-$HF_CMD download TMElyralab/MuseTalk \
-  --local-dir $CheckpointsDir \
-  --include "musetalkV15/musetalk.json" "musetalkV15/unet.pth"
+mkdir -p $CheckpointsDir/musetalkV15
+curl -L --progress-bar --create-dirs -C - \
+  -o $CheckpointsDir/musetalkV15/unet.pth \
+  "https://huggingface.co/TMElyralab/MuseTalk/resolve/main/musetalkV15/unet.pth"
+curl -L --progress-bar \
+  -o $CheckpointsDir/musetalkV15/musetalk.json \
+  "https://huggingface.co/TMElyralab/MuseTalk/resolve/main/musetalkV15/musetalk.json"
 
 # Download SD VAE weights
 echo "Downloading SD VAE weights..."
@@ -60,7 +70,8 @@ echo "Downloading Face Parse Bisent weights..."
 gdown --id 154JgKpzCPW82qINcVieuPH3fZ2e0P812 -O $CheckpointsDir/face-parse-bisent/79999_iter.pth
 
 echo "Downloading ResNet18 weights..."
-curl -L https://download.pytorch.org/models/resnet18-5c106cde.pth \
-  -o $CheckpointsDir/face-parse-bisent/resnet18-5c106cde.pth
+curl -L --progress-bar \
+  -o $CheckpointsDir/face-parse-bisent/resnet18-5c106cde.pth \
+  https://download.pytorch.org/models/resnet18-5c106cde.pth
 
 echo "✅ All weights have been downloaded successfully!"
